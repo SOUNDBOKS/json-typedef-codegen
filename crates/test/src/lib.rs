@@ -265,7 +265,8 @@ fn assert_stable(target_crate_base_dir: &str, test_case_name: &str, tempdir: &te
     // reference output should only happen in local development.
     if !reference_dir.exists() {
         // Create the reference dir.
-        fs::create_dir(&reference_dir).expect("create reference dir");
+        dbg!(&reference_dir);
+        fs::create_dir_all(&reference_dir).expect("create reference dir");
 
         // Copy each file in output_dir into reference_dir.
         for entry in output_dir.read_dir().expect("read output dir") {
