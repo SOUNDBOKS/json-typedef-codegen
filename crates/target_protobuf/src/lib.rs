@@ -88,7 +88,20 @@ impl jtd_codegen::target::Target for Target {
         match expr {
             target::Expr::String => "string".into(),
             target::Expr::Boolean => "bool".into(),
+            target::Expr::Float32 => "float".into(),
+            target::Expr::Float64 => "double".into(),
+            target::Expr::Uint32 => "uint32".into(),
+            target::Expr::Uint16 => "uint32".into(),
+            target::Expr::Uint8 => "uint32".into(),
+            target::Expr::Int32 => "int32".into(),
+            target::Expr::Int16 => "int32".into(),
+            target::Expr::Int8 => "int32".into(),
+            // Extremely conveniently: Both the typed json spec and the protobuf spec define
+            // timestamps to be strings as per RFC 3339
+            target::Expr::Timestamp => "string".into(),
+            target::Expr::NullableOf(t) => t,
             target::Expr::ArrayOf(t) => format!("repeated {}", t),
+            target::Expr::DictOf(t) => format!("map<string, {}>", t),
             _ => todo!("{:?}", expr),
         }
     }
@@ -100,6 +113,21 @@ impl jtd_codegen::target::Target for Target {
         item: target::Item,
     ) -> Result<Option<String>> {
         let item = match item {
+            // Protobuf does not natively support type aliases, so this is quite tricky
+            target::Item::Alias {
+                metadata,
+                name,
+                type_
+            } => {
+                dbg!(&name, &type_);
+                if name == "Root" {
+                    write!(out, "\t{}", description(&metadata, 1))?;
+                    writeln!(out, "{} root = {};", type_, 1)?;
+                    None
+                } else {
+                    unimplemented!()
+                }
+            },
             target::Item::Struct {
                 metadata,
                 name,
